@@ -3253,7 +3253,8 @@ void LocationsBuilderX86_64::HandleFieldSet(HInstruction* instruction,
 }
 
 void InstructionCodeGeneratorX86_64::HandleFieldSet(HInstruction* instruction,
-                                                    const FieldInfo& field_info) {
+                                                    const FieldInfo& field_info,
+                                                    bool value_can_be_null) {
   DCHECK(instruction->IsInstanceFieldSet() || instruction->IsStaticFieldSet());
 
   LocationSummary* locations = instruction->GetLocations();
@@ -3333,7 +3334,7 @@ void InstructionCodeGeneratorX86_64::HandleFieldSet(HInstruction* instruction,
   if (CodeGenerator::StoreNeedsWriteBarrier(field_type, instruction->InputAt(1))) {
     CpuRegister temp = locations->GetTemp(0).AsRegister<CpuRegister>();
     CpuRegister card = locations->GetTemp(1).AsRegister<CpuRegister>();
-    codegen_->MarkGCCard(temp, card, base, value.AsRegister<CpuRegister>());
+    codegen_->MarkGCCard(temp, card, base, value.AsRegister<CpuRegister>(), value_can_be_null);
   }
 
   if (is_volatile) {
@@ -3346,7 +3347,7 @@ void LocationsBuilderX86_64::VisitInstanceFieldSet(HInstanceFieldSet* instructio
 }
 
 void InstructionCodeGeneratorX86_64::VisitInstanceFieldSet(HInstanceFieldSet* instruction) {
-  HandleFieldSet(instruction, instruction->GetFieldInfo());
+  HandleFieldSet(instruction, instruction->GetFieldInfo(), instruction->GetValueCanBeNull());
 }
 
 void LocationsBuilderX86_64::VisitInstanceFieldGet(HInstanceFieldGet* instruction) {
@@ -3370,7 +3371,7 @@ void LocationsBuilderX86_64::VisitStaticFieldSet(HStaticFieldSet* instruction) {
 }
 
 void InstructionCodeGeneratorX86_64::VisitStaticFieldSet(HStaticFieldSet* instruction) {
-  HandleFieldSet(instruction, instruction->GetFieldInfo());
+  HandleFieldSet(instruction, instruction->GetFieldInfo(), instruction->GetValueCanBeNull());
 }
 
 void LocationsBuilderX86_64::VisitNullCheck(HNullCheck* instruction) {
@@ -3675,7 +3676,8 @@ void InstructionCodeGeneratorX86_64::VisitArraySet(HArraySet* instruction) {
           DCHECK_EQ(value_type, Primitive::kPrimNot);
           CpuRegister temp = locations->GetTemp(0).AsRegister<CpuRegister>();
           CpuRegister card = locations->GetTemp(1).AsRegister<CpuRegister>();
-          codegen_->MarkGCCard(temp, card, obj, value.AsRegister<CpuRegister>());
+          codegen_->MarkGCCard(
+              temp, card, obj, value.AsRegister<CpuRegister>(), instruction->GetValueCanBeNull());
         }
       } else {
         DCHECK_EQ(value_type, Primitive::kPrimNot);
@@ -3820,16 +3822,21 @@ void InstructionCodeGeneratorX86_64::VisitBoundsCheck(HBoundsCheck* instruction)
 void CodeGeneratorX86_64::MarkGCCard(CpuRegister temp,
                                      CpuRegister card,
                                      CpuRegister object,
-                                     CpuRegister value) {
+                                     CpuRegister value,
+                                     bool value_can_be_null) {
   Label is_null;
-  __ testl(value, value);
-  __ j(kEqual, &is_null);
+  if (value_can_be_null) {
+    __ testl(value, value);
+    __ j(kEqual, &is_null);
+  }
   __ gs()->movq(card, Address::Absolute(
       Thread::CardTableOffset<kX86_64WordSize>().Int32Value(), true));
   __ movq(temp, object);
   __ shrq(temp, Immediate(gc::accounting::CardTable::kCardShift));
   __ movb(Address(temp, card, TIMES_1, 0),  card);
-  __ Bind(&is_null);
+  if (value_can_be_null) {
+    __ Bind(&is_null);
+  }
 }
 
 void LocationsBuilderX86_64::VisitTemporary(HTemporary* temp) {
