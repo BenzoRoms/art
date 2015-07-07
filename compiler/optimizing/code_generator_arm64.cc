@@ -1352,9 +1352,8 @@ void InstructionCodeGeneratorARM64::VisitArrayGet(HArrayGet* instruction) {
     source = HeapOperand(obj, offset);
   } else {
     Register temp = temps.AcquireSameSizeAs(obj);
-    Register index_reg = RegisterFrom(index, Primitive::kPrimInt);
-    __ Add(temp, obj, Operand(index_reg, LSL, Primitive::ComponentSizeShift(type)));
-    source = HeapOperand(temp, offset);
+    __ Add(temp, obj, offset);
+    source = HeapOperand(temp, XRegisterFrom(index), LSL, Primitive::ComponentSizeShift(type));
   }
 
   codegen_->Load(type, OutputCPURegister(instruction), source);
@@ -1422,9 +1421,11 @@ void InstructionCodeGeneratorARM64::VisitArraySet(HArraySet* instruction) {
         destination = HeapOperand(obj, offset);
       } else {
         Register temp = temps.AcquireSameSizeAs(obj);
-        Register index_reg = InputRegisterAt(instruction, 1);
-        __ Add(temp, obj, Operand(index_reg, LSL, Primitive::ComponentSizeShift(value_type)));
-        destination = HeapOperand(temp, offset);
+        __ Add(temp, obj, offset);
+        destination = HeapOperand(temp,
+                                  XRegisterFrom(index),
+                                  LSL,
+                                  Primitive::ComponentSizeShift(value_type));
       }
 
       codegen_->Store(value_type, value, destination);
