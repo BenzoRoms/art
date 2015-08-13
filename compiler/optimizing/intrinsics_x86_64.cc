@@ -1789,6 +1789,7 @@ UNIMPLEMENTED_INTRINSIC(SystemArrayCopyChar)
 UNIMPLEMENTED_INTRINSIC(ReferenceGetReferent)
 UNIMPLEMENTED_INTRINSIC(IntegerNumberOfLeadingZeros)
 UNIMPLEMENTED_INTRINSIC(LongNumberOfLeadingZeros)
+UNIMPLEMENTED_INTRINSIC(StringEquals)
 
 }  // namespace x86_64
 }  // namespace art
