@@ -1067,7 +1067,6 @@ class HBasicBlock : public ArenaObject<kArenaAllocBasicBlock> {
   // Replace instruction `initial` with `replacement` within this block.
   void ReplaceAndRemoveInstructionWith(HInstruction* initial,
                                        HInstruction* replacement);
-  void MoveInstructionBefore(HInstruction* insn, HInstruction* cursor);
   void AddPhi(HPhi* phi);
   void InsertPhiAfter(HPhi* instruction, HPhi* cursor);
   // RemoveInstruction and RemovePhi delete a given instruction from the respective
