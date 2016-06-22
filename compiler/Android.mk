@@ -69,6 +69,7 @@ LIBART_COMPILER_SRC_FILES := \
 	optimizing/prepare_for_register_allocation.cc \
 	optimizing/reference_type_propagation.cc \
 	optimizing/register_allocator.cc \
+	optimizing/register_allocator_graph_color.cc \
 	optimizing/register_allocator_linear_scan.cc \
 	optimizing/register_allocation_resolver.cc \
 	optimizing/select_generator.cc \
