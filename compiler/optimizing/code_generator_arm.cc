@@ -4474,6 +4474,10 @@ void InstructionCodeGeneratorARM::VisitArrayGet(HArrayGet* instruction) {
   Location out_loc = locations->Out();
   uint32_t data_offset = CodeGenerator::GetArrayDataOffset(instruction);
   Primitive::Type type = instruction->GetType();
+  HInstruction* array_instr = instruction->GetArray();
+  bool has_intermediate_address = array_instr->IsIntermediateAddress();
+  // The read barrier instrumentation does not support the HIntermediateAddress instruction yet.
+  DCHECK(!(has_intermediate_address && kEmitCompilerReadBarrier));
 
   switch (type) {
     case Primitive::kPrimBoolean:
@@ -4488,8 +4492,21 @@ void InstructionCodeGeneratorARM::VisitArrayGet(HArrayGet* instruction) {
         LoadOperandType load_type = GetLoadOperandType(type);
         __ LoadFromOffset(load_type, out_loc.AsRegister<Register>(), obj, full_offset);
       } else {
-        __ add(IP, obj, ShifterOperand(data_offset));
-        codegen_->LoadFromShiftedRegOffset(type, out_loc, IP, index.AsRegister<Register>());
+        Register temp = IP;
+
+        if (has_intermediate_address) {
+          // We do not need to compute the intermediate address from the array: the
+          // input instruction has done it already. See the comment in
+          // `TryExtractArrayAccessAddress()`.
+          if (kIsDebugBuild) {
+            HIntermediateAddress* tmp = array_instr->AsIntermediateAddress();
+            DCHECK_EQ(tmp->GetOffset()->AsIntConstant()->GetValueAsUint64(), data_offset);
+          }
+          temp = obj;
+        } else {
+          __ add(temp, obj, ShifterOperand(data_offset));
+        }
+        codegen_->LoadFromShiftedRegOffset(type, out_loc, temp, index.AsRegister<Register>());
       }
       break;
     }
@@ -4518,8 +4535,21 @@ void InstructionCodeGeneratorARM::VisitArrayGet(HArrayGet* instruction) {
           // reference, if heap poisoning is enabled).
           codegen_->MaybeGenerateReadBarrierSlow(instruction, out_loc, out_loc, obj_loc, offset);
         } else {
-          __ add(IP, obj, ShifterOperand(data_offset));
-          codegen_->LoadFromShiftedRegOffset(type, out_loc, IP, index.AsRegister<Register>());
+          Register temp = IP;
+
+          if (has_intermediate_address) {
+            // We do not need to compute the intermediate address from the array: the
+            // input instruction has done it already. See the comment in
+            // `TryExtractArrayAccessAddress()`.
+            if (kIsDebugBuild) {
+              HIntermediateAddress* tmp = array_instr->AsIntermediateAddress();
+              DCHECK_EQ(tmp->GetOffset()->AsIntConstant()->GetValueAsUint64(), data_offset);
+            }
+            temp = obj;
+          } else {
+            __ add(temp, obj, ShifterOperand(data_offset));
+          }
+          codegen_->LoadFromShiftedRegOffset(type, out_loc, temp, index.AsRegister<Register>());
 
           codegen_->MaybeRecordImplicitNullCheck(instruction);
           // If read barriers are enabled, emit read barriers other than
@@ -4620,6 +4650,10 @@ void InstructionCodeGeneratorARM::VisitArraySet(HArraySet* instruction) {
   uint32_t data_offset =
       mirror::Array::DataOffset(Primitive::ComponentSize(value_type)).Uint32Value();
   Location value_loc = locations->InAt(2);
+  HInstruction* array_instr = instruction->GetArray();
+  bool has_intermediate_address = array_instr->IsIntermediateAddress();
+  // The read barrier instrumentation does not support the HIntermediateAddress instruction yet.
+  DCHECK(!(has_intermediate_address && kEmitCompilerReadBarrier));
 
   switch (value_type) {
     case Primitive::kPrimBoolean:
@@ -4634,10 +4668,23 @@ void InstructionCodeGeneratorARM::VisitArraySet(HArraySet* instruction) {
         StoreOperandType store_type = GetStoreOperandType(value_type);
         __ StoreToOffset(store_type, value_loc.AsRegister<Register>(), array, full_offset);
       } else {
-        __ add(IP, array, ShifterOperand(data_offset));
+        Register temp = IP;
+
+        if (has_intermediate_address) {
+          // We do not need to compute the intermediate address from the array: the
+          // input instruction has done it already. See the comment in
+          // `TryExtractArrayAccessAddress()`.
+          if (kIsDebugBuild) {
+            HIntermediateAddress* tmp = array_instr->AsIntermediateAddress();
+            DCHECK(tmp->GetOffset()->AsIntConstant()->GetValueAsUint64() == data_offset);
+          }
+          temp = array;
+        } else {
+          __ add(temp, array, ShifterOperand(data_offset));
+        }
         codegen_->StoreToShiftedRegOffset(value_type,
                                           value_loc,
-                                          IP,
+                                          temp,
                                           index.AsRegister<Register>());
       }
       break;
@@ -4645,6 +4692,9 @@ void InstructionCodeGeneratorARM::VisitArraySet(HArraySet* instruction) {
 
     case Primitive::kPrimNot: {
       Register value = value_loc.AsRegister<Register>();
+      // TryExtractArrayAccessAddress optimization is never applied for non-primitive ArraySet.
+      // See the comment in instruction_simplifier_shared.cc.
+      DCHECK(!has_intermediate_address);
 
       if (instruction->InputAt(2)->IsNullConstant()) {
         // Just setting null.
@@ -4865,6 +4915,37 @@ void InstructionCodeGeneratorARM::VisitArrayLength(HArrayLength* instruction) {
   Register out = locations->Out().AsRegister<Register>();
   __ LoadFromOffset(kLoadWord, out, obj, offset);
   codegen_->MaybeRecordImplicitNullCheck(instruction);
+}
+
+void LocationsBuilderARM::VisitIntermediateAddress(HIntermediateAddress* instruction) {
+  // The read barrier instrumentation does not support the HIntermediateAddress instruction yet.
+  DCHECK(!kEmitCompilerReadBarrier);
+  LocationSummary* locations =
+      new (GetGraph()->GetArena()) LocationSummary(instruction, LocationSummary::kNoCall);
+
+  locations->SetInAt(0, Location::RequiresRegister());
+  locations->SetInAt(1, Location::RegisterOrConstant(instruction->GetOffset()));
+  locations->SetOut(Location::RequiresRegister(), Location::kNoOutputOverlap);
+}
+
+void InstructionCodeGeneratorARM::VisitIntermediateAddress(HIntermediateAddress* instruction) {
+  LocationSummary* locations = instruction->GetLocations();
+  Location out = locations->Out();
+  Location first = locations->InAt(0);
+  Location second = locations->InAt(1);
+
+  // The read barrier instrumentation does not support the HIntermediateAddress instruction yet.
+  DCHECK(!kEmitCompilerReadBarrier);
+
+  if (second.IsRegister()) {
+    __ add(out.AsRegister<Register>(),
+           first.AsRegister<Register>(),
+           ShifterOperand(second.AsRegister<Register>()));
+  } else {
+    __ AddConstant(out.AsRegister<Register>(),
+                   first.AsRegister<Register>(),
+                   second.GetConstant()->AsIntConstant()->GetValue());
+  }
 }
 
 void LocationsBuilderARM::VisitBoundsCheck(HBoundsCheck* instruction) {

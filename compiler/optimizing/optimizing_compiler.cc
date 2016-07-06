@@ -464,8 +464,12 @@ void OptimizingCompiler::RunArchOptimizations(InstructionSet instruction_set,
       arm::DexCacheArrayFixups* fixups = new (arena) arm::DexCacheArrayFixups(graph, stats);
       arm::InstructionSimplifierArm* simplifier =
           new (arena) arm::InstructionSimplifierArm(graph, stats);
+      SideEffectsAnalysis* side_effects = new (arena) SideEffectsAnalysis(graph);
+      GVNOptimization* gvn = new (arena) GVNOptimization(graph, *side_effects, "GVN_after_arch");
       HOptimization* arm_optimizations[] = {
         simplifier,
+        side_effects,
+        gvn,
         fixups
       };
       RunOptimizations(arm_optimizations, arraysize(arm_optimizations), pass_observer);

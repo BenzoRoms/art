@@ -1284,7 +1284,8 @@ class HLoopInformationOutwardIterator : public ValueObject {
 #else
 #define FOR_EACH_CONCRETE_INSTRUCTION_SHARED(M)                         \
   M(BitwiseNegatedRight, Instruction)                                   \
-  M(MultiplyAccumulate, Instruction)
+  M(MultiplyAccumulate, Instruction)                                    \
+  M(IntermediateAddress, Instruction)
 #endif
 
 #ifndef ART_ENABLE_CODEGEN_arm
@@ -1298,8 +1299,7 @@ class HLoopInformationOutwardIterator : public ValueObject {
 #define FOR_EACH_CONCRETE_INSTRUCTION_ARM64(M)
 #else
 #define FOR_EACH_CONCRETE_INSTRUCTION_ARM64(M)                          \
-  M(Arm64DataProcWithShifterOp, Instruction)                            \
-  M(Arm64IntermediateAddress, Instruction)
+  M(Arm64DataProcWithShifterOp, Instruction)
 #endif
 
 #define FOR_EACH_CONCRETE_INSTRUCTION_MIPS(M)

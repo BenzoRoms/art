@@ -218,7 +218,7 @@ static bool CanEncodeConstantAsImmediate(HConstant* constant, HInstruction* inst
     return vixl::Assembler::IsImmMovn(value, vixl::kXRegSize);
   } else {
     DCHECK(instr->IsAdd() ||
-           instr->IsArm64IntermediateAddress() ||
+           instr->IsIntermediateAddress() ||
            instr->IsBoundsCheck() ||
            instr->IsCompare() ||
            instr->IsCondition() ||
