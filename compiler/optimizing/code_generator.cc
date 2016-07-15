@@ -238,7 +238,8 @@ void CodeGenerator::InitializeCodeGeneration(size_t number_of_spill_slots,
   block_order_ = &block_order;
   DCHECK(block_order_->Get(0) == GetGraph()->GetEntryBlock());
   ComputeSpillMask();
-  first_register_slot_in_slow_path_ = (number_of_out_slots + number_of_spill_slots) * kVRegSize;
+  first_register_slot_in_slow_path_ = RoundUp(
+      (number_of_out_slots + number_of_spill_slots) * kVRegSize, GetPreferredSlotsAlignment());
 
   if (number_of_spill_slots == 0
       && !HasAllocatedCalleeSaveRegisters()

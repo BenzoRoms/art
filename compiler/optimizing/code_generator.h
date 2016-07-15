@@ -164,6 +164,8 @@ class CodeGenerator {
                                 size_t maximum_number_of_live_fp_registers,
                                 size_t number_of_out_slots,
                                 const GrowableArray<HBasicBlock*>& block_order);
+  // Backends can override this as necessary. For most, no special alignment is required.
+  virtual uint32_t GetPreferredSlotsAlignment() const { return 1; }
   int32_t GetStackSlot(HLocal* local) const;
   Location GetTemporaryLocation(HTemporary* temp) const;
 

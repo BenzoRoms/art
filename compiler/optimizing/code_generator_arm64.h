@@ -321,6 +321,10 @@ class CodeGeneratorARM64 : public CodeGenerator {
     }
   }
 
+  // We want to use the STP and LDP instructions to spill and restore registers for slow paths.
+  // These instructions can only encode offsets that are multiples of the register size accessed.
+  uint32_t GetPreferredSlotsAlignment() const OVERRIDE { return vixl::kXRegSizeInBytes; }
+
   void Finalize(CodeAllocator* allocator) OVERRIDE;
 
   // Code generation helpers.
