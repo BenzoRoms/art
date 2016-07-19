@@ -2006,6 +2006,10 @@ void MipsAssembler::BindPcRelBaseLabel() {
   Bind(&pc_rel_base_label_);
 }
 
+uint32_t MipsAssembler::GetPcRelBaseLabelLocation() const {
+  return GetLabelLocation(&pc_rel_base_label_);
+}
+
 void MipsAssembler::FinalizeLabeledBranch(MipsLabel* label) {
   uint32_t length = branches_.back().GetLength();
   if (!label->IsBound()) {
