@@ -24,6 +24,7 @@
 #include "base/macros.h"
 #include "compiler_filter.h"
 #include "globals.h"
+#include "optimizing/register_allocator.h"
 #include "utils.h"
 
 namespace art {
@@ -75,7 +76,8 @@ class CompilerOptions FINAL {
                   bool abort_on_hard_verifier_failure,
                   const std::string& dump_cfg_file_name,
                   bool dump_cfg_append,
-                  bool force_determinism);
+                  bool force_determinism,
+                  RegisterAllocator::Strategy regalloc_strategy);
 
   CompilerFilter::Filter GetCompilerFilter() const {
     return compiler_filter_;
@@ -245,6 +247,10 @@ class CompilerOptions FINAL {
     return force_determinism_;
   }
 
+  RegisterAllocator::Strategy GetRegisterAllocationStrategy() const {
+    return register_allocation_strategy_;
+  }
+
  private:
   void ParseDumpInitFailures(const StringPiece& option, UsageFn Usage);
   void ParseDumpCfgPasses(const StringPiece& option, UsageFn Usage);
@@ -255,6 +261,7 @@ class CompilerOptions FINAL {
   void ParseSmallMethodMax(const StringPiece& option, UsageFn Usage);
   void ParseLargeMethodMax(const StringPiece& option, UsageFn Usage);
   void ParseHugeMethodMax(const StringPiece& option, UsageFn Usage);
+  void ParseRegisterAllocationStrategy(const StringPiece& option, UsageFn Usage);
 
   CompilerFilter::Filter compiler_filter_;
   size_t huge_method_threshold_;
@@ -297,6 +304,8 @@ class CompilerOptions FINAL {
   // Whether the compiler should trade performance for determinism to guarantee exactly reproducable
   // outcomes.
   bool force_determinism_;
+
+  RegisterAllocator::Strategy register_allocation_strategy_;
 
   friend class Dex2Oat;
 
