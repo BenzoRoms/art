@@ -58,6 +58,7 @@ LIBART_COMPILER_SRC_FILES := \
 	optimizing/instruction_simplifier.cc \
 	optimizing/intrinsics.cc \
 	optimizing/licm.cc \
+        optimizing/linear_order.cc \
 	optimizing/load_store_elimination.cc \
 	optimizing/locations.cc \
         optimizing/loop_optimization.cc \
