@@ -1022,6 +1022,8 @@ public class Main {
   /// CHECK: Goto
 
   void foo1(int[] array, int start, int end, boolean expectInterpreter) {
+    if (end < 0)
+      throw new Error("");
     // Three HDeoptimize will be added. Two for the index
     // and one for null check on array (to hoist null
     // check and array.length out of loop).
@@ -1060,6 +1062,8 @@ public class Main {
   /// CHECK: Goto
 
   void foo2(int[] array, int start, int end, boolean expectInterpreter) {
+    if (end < 0)
+      throw new Error("");
     // Three HDeoptimize will be added. Two for the index
     // and one for null check on array (to hoist null
     // check and array.length out of loop).
@@ -1098,6 +1102,8 @@ public class Main {
   /// CHECK: Goto
 
   void foo3(int[] array, int end, boolean expectInterpreter) {
+    if (end < 0)
+      throw new Error("");
     // Three HDeoptimize will be added. Two for the index
     // and one for null check on array (to hoist null check
     // and array.length out of loop).
@@ -1137,6 +1143,8 @@ public class Main {
   /// CHECK: Goto
 
   void foo4(int[] array, int end, boolean expectInterpreter) {
+    if (end < 0)
+      throw new Error("");
     // Three HDeoptimize will be added. Two for the index
     // and one for null check on array (to hoist null check
     // and array.length out of loop).
@@ -1184,6 +1192,8 @@ public class Main {
   /// CHECK: Goto
 
   void foo5(int[] array, int end, boolean expectInterpreter) {
+    if (end < 0)
+      throw new Error("");
     // Bounds check in this loop can be eliminated without deoptimization.
     for (int i = array.length - 1 ; i >= 0; i--) {
       array[i] = 1;
@@ -1243,6 +1253,8 @@ public class Main {
   /// CHECK: Goto
 
   void foo6(int[] array, int start, int end, boolean expectInterpreter) {
+    if (end < 0)
+      throw new Error("");
     for (int i = end; i >= start; i--) {
       if (expectInterpreter) {
         assertIsInterpreted();
