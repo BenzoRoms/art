@@ -1941,7 +1941,7 @@ class HInstruction : public ArenaObject<kArenaAllocInstruction> {
     return !HasEnvironmentUses() && GetUses().HasExactlyOneElement();
   }
 
-  bool IsDeadAndRemovable() const {
+  bool IsRemovable() const {
     return
         !HasSideEffects() &&
         !CanThrow() &&
@@ -1949,9 +1949,12 @@ class HInstruction : public ArenaObject<kArenaAllocInstruction> {
         !IsControlFlow() &&
         !IsNativeDebugInfo() &&
         !IsParameterValue() &&
-        !HasUses() &&
         // If we added an explicit barrier then we should keep it.
         !IsMemoryBarrier();
+  }
+
+  bool IsDeadAndRemovable() const {
+    return IsRemovable() && !HasUses();
   }
 
   // Does this instruction strictly dominate `other_instruction`?
