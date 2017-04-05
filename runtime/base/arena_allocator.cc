@@ -35,6 +35,7 @@ constexpr size_t kMemoryToolRedZoneBytes = 8;
 
 template <bool kCount>
 const char* const ArenaAllocatorStatsImpl<kCount>::kAllocNames[] = {
+  // Every name should have the same width and end with a space. Abbreviate if necessary:
   "Misc         ",
   "SwitchTbl    ",
   "SlowPaths    ",
@@ -51,6 +52,7 @@ const char* const ArenaAllocatorStatsImpl<kCount>::kAllocNames[] = {
   "Successors   ",
   "Dominated    ",
   "Instruction  ",
+  "CtorFenceIns ",
   "InvokeInputs ",
   "PhiInputs    ",
   "LoopInfo     ",
