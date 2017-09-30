@@ -22,6 +22,11 @@ art_path := $(LOCAL_PATH)
 # clean-oat rules
 #
 
+export ART_BUILD_HOST_DEBUG=false
+export ART_BUILD_HOST_NDEBUG=true
+export ART_BUILD_TARGET_DEBUG=false
+export ART_BUILD_TARGET_NDEBUG=true
+
 include $(art_path)/build/Android.common_path.mk
 include $(art_path)/build/Android.oat.mk
 
@@ -371,11 +376,8 @@ LOCAL_REQUIRED_MODULES += libart_fake
 # * We will never add them if PRODUCT_ART_TARGET_INCLUDE_DEBUG_BUILD = false.
 # * We will always add them if PRODUCT_ART_TARGET_INCLUDE_DEBUG_BUILD = true.
 # * Otherwise, we will add them by default to userdebug and eng builds.
-art_target_include_debug_build := $(PRODUCT_ART_TARGET_INCLUDE_DEBUG_BUILD)
+art_target_include_debug_build := false
 ifneq (false,$(art_target_include_debug_build))
-ifneq (,$(filter userdebug eng,$(TARGET_BUILD_VARIANT)))
-  art_target_include_debug_build := true
-endif
 ifeq (true,$(art_target_include_debug_build))
 LOCAL_REQUIRED_MODULES += \
     dex2oatd \

@@ -25,9 +25,6 @@ art_global_defaults {
         // Base set of cflags used by all things ART.
         "-fno-rtti",
         "-ggdb3",
-        "-Wall",
-        "-Werror",
-        "-Wextra",
         "-Wstrict-aliasing",
         "-fstrict-aliasing",
         "-Wunreachable-code",
@@ -59,6 +56,7 @@ art_global_defaults {
         "-Wunreachable-code-break",
         "-Wunreachable-code-return",
 
+
         // Bug: http://b/29823425  Disable -Wconstant-conversion and
         // -Wundefined-var-template for Clang update to r271374
         "-Wno-constant-conversion",
@@ -85,9 +83,9 @@ art_global_defaults {
 
                 // To use oprofile_android --callgraph, uncomment this and recompile with
                 //    mmma -j art
-                // "-fno-omit-frame-pointer",
-                // "-marm",
-                // "-mapcs",
+                "-fno-omit-frame-pointer",
+                "-marm",
+                //"-mapcs",
             ],
             include_dirs: [
                 // We optimize Thread::Current() with a direct TLS access. This requires access to a
